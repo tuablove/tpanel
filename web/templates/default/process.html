@@ -1,0 +1,69 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="main-content">
+    <div class="container-fluid" style="padding-bottom:50px">
+        <div class="file-box bgw mtb15">
+            <div class="plr15 ptb15">
+                <div class="clearfix">
+                    <div class="pull-left">
+                        <h3 class="f16">进程管理</h3>
+                    </div>
+                    <div class="pull-right">
+                        <div class="search">
+                            <input type="text" id="search_process" class="ser-text pull-left" placeholder="搜索进程(PID/名称/用户/命令)" autocomplete="false" />
+                            <button type="button" class="ser-sub pull-left" onclick='searchProcess()'></button>
+                        </div>
+                        <button class="btn btn-default btn-sm ml10" onclick="refreshProcess()" title="刷新">
+                            <span class="glyphicon glyphicon-refresh"></span> 刷新
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="divtable pd15">
+                <table width="100%" class="table table-hover" id="processTable">
+                    <thead>
+                        <tr>
+                            <th width="80" onclick="listProcessOrder('pid', this)" style="cursor: pointer;">PID <span class="glyphicon glyphicon-option-horizontal" style="margin-left:5px;color:#bbb"></span></th>
+                            <th width="150" onclick="listProcessOrder('name', this)" style="cursor: pointer;">进程名 <span class="glyphicon glyphicon-option-horizontal" style="margin-left:5px;color:#bbb"></span></th>
+                            <th width="100" onclick="listProcessOrder('username', this)" style="cursor: pointer;">用户 <span class="glyphicon glyphicon-option-horizontal" style="margin-left:5px;color:#bbb"></span></th>
+                            <th width="80" onclick="listProcessOrder('cpu_percent', this)" style="cursor: pointer;">CPU% <span class="glyphicon glyphicon-option-horizontal" style="margin-left:5px;color:#bbb"></span></th>
+                            <th width="100" onclick="listProcessOrder('memory_rss', this)" style="cursor: pointer;">内存 <span class="glyphicon glyphicon-option-horizontal" style="margin-left:5px;color:#bbb"></span></th>
+                            <th width="80" onclick="listProcessOrder('memory_percent', this)" style="cursor: pointer;">内存% <span class="glyphicon glyphicon-option-horizontal" style="margin-left:5px;color:#bbb"></span></th>
+                            <th width="80" onclick="listProcessOrder('num_threads', this)" style="cursor: pointer;">线程 <span class="glyphicon glyphicon-option-horizontal" style="margin-left:5px;color:#bbb"></span></th>
+                            <th width="100" onclick="listProcessOrder('status', this)" style="cursor: pointer;">状态 <span class="glyphicon glyphicon-option-horizontal" style="margin-left:5px;color:#bbb"></span></th>
+                            <th width="150" onclick="listProcessOrder('create_time', this)" style="cursor: pointer;">启动时间 <span class="glyphicon glyphicon-option-horizontal" style="margin-left:5px;color:#bbb"></span></th>
+                            <th width="200">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="processBody" class="list-list">
+                        <tr>
+                            <td colspan="10" style="text-align:center;padding:20px;">
+                                <span class="glyphicon glyphicon-refresh"></span> 正在加载进程列表...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="dataTables_paginate paging_bootstrap pagination plr15" style="position: relative; top: -6px;">
+                <ul id="processPage" class="page"></ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/static/app/process.js?v={{config.version}}"></script>
+<script type="text/javascript">
+$(document).ready(function() {
+    $("#search_process").keyup(function(e){
+        if(e.keyCode == 13) searchProcess();
+    });
+    
+    // 延迟加载，确保页面完全渲染
+    setTimeout(function() {
+        getProcessList(1);
+        initProcessOrder();
+    }, 300);
+});
+</script>
+{% endblock %}
