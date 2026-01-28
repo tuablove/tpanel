@@ -78,10 +78,10 @@ setTimeout(function() {
 
 var xPath = getCookie('open_dir_path');
 setTimeout(function() {
-    getFiles((xPath != undefined ? xPath : '/www/wwwroot'));
+    getFiles((xPath != undefined ? xPath : '/'));
 }, 800);
 
-pathPlaceBtn((xPath != undefined ? xPath : '/www/wwwroot'));
+pathPlaceBtn((xPath != undefined ? xPath : '/'));
 setCookie('uploadSize', 1024 * 1024 * 1024);
 if (getCookie('rank') == undefined || getCookie('rank') == null) {
     setCookie('rank', 'a');

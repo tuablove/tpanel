@@ -187,6 +187,30 @@ def webssh(data):
     return
 
 
+@socketio.on('native_terminal')
+def native_terminal(data):
+    """原生终端 SocketIO 路由 - 使用 pty 直接创建系统 shell"""
+    if not isLogined():
+        emit('server_response', {'data': '会话丢失，请重新登陆面板!\r\n'})
+        return None
+
+    import utils.ssh.native_terminal as native_terminal_module
+    terminal = native_terminal_module.native_terminal.instance()
+    terminal.run(request.sid, data, socketio_instance=socketio)
+    return
+
+
+@socketio.on('disconnect')
+def handle_disconnect():
+    """处理客户端断开连接，清理终端资源"""
+    try:
+        import utils.ssh.native_terminal as native_terminal_module
+        terminal = native_terminal_module.native_terminal.instance()
+        terminal.close_terminal(request.sid)
+    except:
+        pass
+
+
 # File logging
 logger = logging.getLogger('werkzeug')
 logger.setLevel(config.CONSOLE_LOG_LEVEL)

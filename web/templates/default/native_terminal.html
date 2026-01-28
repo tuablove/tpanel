@@ -1,0 +1,203 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="main-content">
+    <div class="container-fluid" style="padding-bottom:50px">
+        <div class="bgw mtb15">
+            <div class="plr15 ptb15">
+                <div class="clearfix">
+                    <div class="pull-left">
+                        <h3 class="f16">原生终端</h3>
+                        <p class="f12 c9 mt5">使用系统原生 shell，无需 SSH 连接</p>
+                    </div>
+                    <div class="pull-right">
+                        <button class="btn btn-default btn-sm" onclick="nativeTerminalResize()" title="调整大小">
+                            <i class="glyphicon glyphicon-resize-full"></i> 调整大小
+                        </button>
+                        <button class="btn btn-default btn-sm" onclick="nativeTerminalClear()" title="清屏">
+                            <i class="glyphicon glyphicon-trash"></i> 清屏
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="nativeTerminalClose()" title="关闭终端">
+                            <i class="glyphicon glyphicon-remove"></i> 关闭
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="plr15 pb15">
+                <div class="term-box" style="background: #000; border-radius: 4px; padding: 10px;">
+                    <div id="native-terminal-container" style="width: 100%; height: 600px;"></div>
+                </div>
+            </div>
+            <div class="plr15 pb15">
+                <div class="shell-text-input">
+                    <textarea type="text" class="bt-input-text-shell form-control" 
+                              placeholder="请将命令粘贴到此处，然后按 Ctrl+Enter 发送..." 
+                              rows="3" name="native_terminal_copy"></textarea>
+                    <div class="shell-btn-group mt10">
+                        <button class="btn btn-success btn-sm pull-right shell_btn_send" 
+                                onclick="nativeTerminalSend()">发送 (Ctrl+Enter)</button>
+                        <button class="btn btn-default btn-sm pull-right mr10" 
+                                onclick="nativeTerminalPaste()">粘贴</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 引入必要的脚本 -->
+<script src="/static/js/native-terminal.js?v={{config.version}}"></script>
+<script type="text/javascript">
+var nativeTerm = null;
+
+// 初始化原生终端
+$(document).ready(function() {
+    // 确保 Terminal 库已加载
+    if (typeof Terminal === 'undefined') {
+        layer.msg('终端库未加载，请刷新页面重试', {icon: 2});
+        return;
+    }
+
+    // 创建原生终端实例
+    nativeTerm = new NativeTerminal('native-terminal-container', {
+        id: 'native-terminal',
+        fontSize: 14
+    });
+
+    // 注册回调
+    nativeTerm.registerConnectedCallBack(function() {
+        console.log('原生终端已连接');
+        layer.msg('终端连接成功', {icon: 1, time: 1000});
+    });
+
+    nativeTerm.registerCloseCallBack(function() {
+        console.log('原生终端已关闭');
+    });
+
+    // 绑定快捷键
+    $("textarea[name='native_terminal_copy']").keydown(function(e) {
+        if (e.ctrlKey && e.keyCode == 13) {
+            e.preventDefault();
+            nativeTerminalSend();
+        }
+    });
+
+    // 窗口大小变化时调整终端
+    $(window).resize(function() {
+        if (nativeTerm && nativeTerm.term) {
+            setTimeout(function() {
+                nativeTerm.resize({
+                    cols: nativeTerm.term.cols,
+                    rows: nativeTerm.term.rows
+                });
+            }, 100);
+        }
+    });
+});
+
+// 发送命令
+function nativeTerminalSend() {
+    var textarea = $("textarea[name='native_terminal_copy']");
+    var text = textarea.val();
+    if (text && nativeTerm) {
+        nativeTerm.send(text);
+        textarea.val('');
+        if (nativeTerm.term) {
+            nativeTerm.term.focus();
+        }
+    }
+}
+
+// 粘贴文本
+function nativeTerminalPaste() {
+    var textarea = $("textarea[name='native_terminal_copy']");
+    textarea.focus();
+    // 尝试从剪贴板粘贴
+    if (navigator.clipboard && navigator.clipboard.readText) {
+        navigator.clipboard.readText().then(function(text) {
+            textarea.val(text);
+        }).catch(function(err) {
+            layer.msg('无法读取剪贴板，请手动粘贴', {icon: 2});
+        });
+    } else {
+        layer.msg('浏览器不支持剪贴板 API，请手动粘贴', {icon: 2});
+    }
+}
+
+// 调整终端大小
+function nativeTerminalResize() {
+    if (nativeTerm && nativeTerm.term) {
+        var cols = Math.floor(($('#native-terminal-container').width() - 40) / 8.4);
+        var rows = Math.floor(($('#native-terminal-container').height() - 40) / 17);
+        nativeTerm.resize({
+            cols: cols || 80,
+            rows: rows || 24
+        });
+        layer.msg('终端大小已调整', {icon: 1, time: 1000});
+    }
+}
+
+// 清屏
+function nativeTerminalClear() {
+    if (nativeTerm && nativeTerm.term) {
+        nativeTerm.send('\x0c'); // Ctrl+L 清屏
+        nativeTerm.term.focus();
+    }
+}
+
+// 关闭终端
+function nativeTerminalClose() {
+    layer.confirm('确定要关闭终端吗？', {icon: 3, title: '提示'}, function(index) {
+        if (nativeTerm) {
+            nativeTerm.close();
+            nativeTerm = null;
+        }
+        layer.close(index);
+        // 可以选择跳转或关闭窗口
+        setTimeout(function() {
+            window.location.href = '/';
+        }, 500);
+    });
+}
+
+// 页面卸载时清理
+$(window).on('beforeunload', function() {
+    if (nativeTerm) {
+        nativeTerm.close();
+    }
+});
+</script>
+
+<style>
+.term-box {
+    position: relative;
+    overflow: hidden;
+}
+
+.shell-text-input {
+    margin-top: 15px;
+}
+
+.bt-input-text-shell {
+    width: 100%;
+    resize: vertical;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+}
+
+.shell-btn-group {
+    margin-top: 10px;
+}
+
+#native-terminal-container {
+    min-height: 600px;
+}
+
+@media (max-width: 768px) {
+    #native-terminal-container {
+        height: 400px !important;
+        min-height: 400px;
+    }
+}
+</style>
+{% endblock %}

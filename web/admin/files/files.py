@@ -147,8 +147,8 @@ def get_file_last_body():
 @panel_login_required
 def get_dir():
     path = request.form.get('path', '')
-    if not os.path.exists(path):
-        path = mw.getFatherDir() + '/wwwroot'
+    if not path or path == '' or not os.path.exists(path):
+        path = '/'
     search = request.form.get('search', '').strip().lower()
     search_all = request.form.get('all', '').strip().lower()
     page = request.form.get('p', '1').strip().lower()

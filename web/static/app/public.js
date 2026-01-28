@@ -1842,6 +1842,110 @@ function webShell() {
     }, 100);
 }
 
+/**
+ * 打开原生终端（弹窗模式）
+ */
+function nativeTerminal() {
+    // 检查是否已加载原生终端脚本
+    if (typeof NativeTerminal === 'undefined') {
+        layer.msg('正在加载终端组件...', {icon: 16});
+        // 动态加载脚本
+        var script = document.createElement('script');
+        script.src = '/static/js/native-terminal.js?v=' + (new Date().getTime());
+        script.onload = function() {
+            setTimeout(function() {
+                nativeTerminal();
+            }, 100);
+        };
+        document.head.appendChild(script);
+        return;
+    }
+
+    var nativeTermInstance = null;
+    var termCols = 83;
+    var termRows = 21;
+    
+    var term_box = layer.open({
+        type: 1,
+        title: "原生终端",
+        area: ['800px', '600px'],
+        closeBtn: 1,
+        shadeClose: false,
+        content: '<div class="term-box" style="background: #000; padding: 10px; border-radius: 4px;">' +
+                 '<div id="native-term-popup" style="width: 100%; height: 450px;"></div></div>' +
+                 '<div class="shell-text-input" style="margin-top: 10px;">' +
+                 '<textarea type="text" class="bt-input-text-shell form-control" ' +
+                 'placeholder="请将命令粘贴到此处，然后按 Ctrl+Enter 发送..." ' +
+                 'rows="2" name="native_term_popup_copy" style="width: 100%; font-family: monospace; font-size: 12px;"></textarea>' +
+                 '<div class="shell-btn-group" style="margin-top: 10px; text-align: right;">' +
+                 '<button class="btn btn-success btn-sm shell_btn_send_popup">发送 (Ctrl+Enter)</button>' +
+                 '<button class="btn btn-default btn-sm shell_btn_close_popup" style="margin-left: 10px;">关闭</button>' +
+                 '</div></div>',
+        success: function(layero, index) {
+            // 初始化终端
+            setTimeout(function() {
+                if (typeof Terminal === 'undefined') {
+                    layer.msg('终端库未加载', {icon: 2});
+                    return;
+                }
+
+                nativeTermInstance = new NativeTerminal('native-term-popup', {
+                    id: 'native-term-popup',
+                    fontSize: 14
+                });
+
+                nativeTermInstance.registerConnectedCallBack(function() {
+                    console.log('原生终端弹窗已连接');
+                });
+
+                nativeTermInstance.registerCloseCallBack(function() {
+                    layer.close(index);
+                });
+
+                // 绑定关闭按钮
+                $(".shell_btn_close_popup").click(function() {
+                    if (nativeTermInstance) {
+                        nativeTermInstance.close();
+                    }
+                    layer.close(index);
+                });
+
+                // 绑定发送按钮
+                $(".shell_btn_send_popup").click(function() {
+                    var textarea = $("textarea[name='native_term_popup_copy']");
+                    var text = textarea.val();
+                    if (text && nativeTermInstance) {
+                        nativeTermInstance.send(text);
+                        textarea.val('');
+                        if (nativeTermInstance.term) {
+                            nativeTermInstance.term.focus();
+                        }
+                    }
+                });
+
+                // 绑定快捷键
+                $("textarea[name='native_term_popup_copy']").keydown(function(e) {
+                    if (e.ctrlKey && e.keyCode == 13) {
+                        e.preventDefault();
+                        $(".shell_btn_send_popup").click();
+                    }
+                });
+            }, 200);
+        },
+        cancel: function() {
+            if (nativeTermInstance) {
+                nativeTermInstance.close();
+            }
+        },
+        end: function() {
+            if (nativeTermInstance) {
+                nativeTermInstance.close();
+                nativeTermInstance = null;
+            }
+        }
+    });
+}
+
 function shell_to_baidu() {
     var selectText = getCookie('ssh_selection');
     remove_ssh_menu();

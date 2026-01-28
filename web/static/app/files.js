@@ -372,6 +372,9 @@ function getFiles(Path) {
     } else {
         var p = Path;
         Path = getCookie('open_dir_path');
+        if(!Path || Path == undefined || Path == '') {
+            Path = '/';
+        }
     }
 
     var post = {};
@@ -603,7 +606,8 @@ function getFiles(Path) {
         }
         setCookie('open_dir_path',rdata.path);
         BarTools += ' <button onclick="javascript:getFiles(\'' + rdata.path + '\');" class="btn btn-default btn-sm glyphicon glyphicon-refresh" title="刷新"></button>\
-            <button onclick="webShell()" title="终端" type="button" class="btn btn-default btn-sm"><em class="ico-cmd"></em></button>';
+            <button onclick="webShell()" title="SSH终端" type="button" class="btn btn-default btn-sm"><em class="ico-cmd"></em></button>\
+            <button onclick="nativeTerminal()" title="原生终端" type="button" class="btn btn-default btn-sm" style="margin-left: 5px;"><em class="ico-cmd"></em> 原生</button>';
         var copyName = getCookie('copyFileName');
         var cutName = getCookie('cutFileName');
         var isPaste = (copyName == 'null') ? cutName : copyName;

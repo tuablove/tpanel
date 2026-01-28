@@ -36,6 +36,13 @@ def index():
     name = thisdb.getOption('template', default='default')
     return render_template('%s/index.html' % name)
 
+@blueprint.route('/native_terminal', endpoint='native_terminal', methods=['GET'])
+@panel_login_required
+def native_terminal():
+    """原生终端页面"""
+    name = thisdb.getOption('template', default='default')
+    return render_template('%s/native_terminal.html' % name)
+
 # 安全路径
 @blueprint.route('/<path>',endpoint='admin_safe_path',methods=['GET'])
 def admin_safe_path(path):
